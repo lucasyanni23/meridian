@@ -101,7 +101,7 @@ window.MV_DATA = {
       poder: "Cassinos, boates, chantagem e lavagem por cripto e apostas",
       resumo: "Os rivais. Cassinos, boates, chantagem tecnológica e lavagem por cripto e apostas.",
       galeria: [
-        { rotulo: "Sede", titulo: "Boate Neon Mirage", img: "" },
+        { rotulo: "Sede", titulo: "Boate Neon Mirage", img: "img/neon-mirage.webp" },
         { rotulo: "Território", titulo: "Ocean Drive", img: "img/south-beach.webp" },
         { rotulo: "Residência", titulo: "Cobertura em Miami Beach", img: "" }
       ],
@@ -289,7 +289,7 @@ window.MV_DATA = {
   locais: [
     { id: "mansao", nome: "Mansão Castillo", bairro: "Star Island", faccao: "castillo", img: "", mapa: { x: 248, y: 226 },
       texto: "Fortaleza hipervigiada. Cenário das festas da alta sociedade e das reuniões de emergência da dinastia." },
-    { id: "neon-mirage", nome: "Boate Neon Mirage", bairro: "South Beach", faccao: "navarro", img: "", mapa: { x: 300, y: 292 },
+    { id: "neon-mirage", nome: "Boate Neon Mirage", bairro: "South Beach", faccao: "navarro", img: "img/neon-mirage.webp", mapa: { x: 300, y: 292 },
       texto: "Salas VIP à prova de som onde a elite fecha acordos, se excede e é filmada em segredo para futuras chantagens." },
     { id: "marina", nome: "Marina de Coconut Grove", bairro: "Coconut Grove", faccao: "forca", img: "", mapa: { x: 118, y: 362 },
       texto: "Lanchas abandonadas e iates de luxo. Ponto de encontro sombrio, muito usado pela polícia para falar com informantes no meio da noite." },
