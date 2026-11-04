@@ -276,7 +276,7 @@ window.MV_DATA = {
   /* Locais: "faccao" é o id de quem controla (ou "neutro").
      "mapa" posiciona o ponto no mapa estilizado (x de 0 a 360, y de 0 a 440). */
   bairros: [
-    { id: "south-beach", nome: "South Beach / Ocean Drive", coord: "25.7826° N · 80.1341° W", faccao: "navarro", img: "", mapa: { x: 292, y: 262 },
+    { id: "south-beach", nome: "South Beach / Ocean Drive", coord: "25.7826° N · 80.1341° W", faccao: "navarro", img: "img/south-beach.webp", mapa: { x: 292, y: 262 },
       texto: "O coração do néon. Turistas, carros esporte e hotéis Art Déco. Território neutro de aparências, controlado nas sombras pelos Navarro." },
     { id: "brickell", nome: "Brickell", coord: "25.7601° N · 80.1936° W", faccao: "castillo", img: "", mapa: { x: 148, y: 272 },
       texto: "Distrito financeiro de arranha-céus de vidro e sedes corporativas. Onde os Castillo reinam absolutos por meio de construtoras e bancos de investimento." },
