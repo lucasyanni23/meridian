@@ -543,6 +543,36 @@ h2, h3, h4 { text-wrap: balance; }
 .modal-close { position: sticky; top: 0; display: flex; justify-content: flex-end; padding: 10px 10px 0; background: linear-gradient(var(--night-2), transparent); z-index: 2; margin-bottom: -46px; }
 .modal-close button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--night-3); cursor: pointer; display: grid; place-items: center; }
 
+/* ---------- Fotos ampliáveis ---------- */
+[data-act="zoom"] { cursor: zoom-in; }
+.zoom-badge {
+  position: absolute; top: 10px; right: 10px; z-index: 3; width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(18, 10, 36, .72); color: var(--ink);
+  border: 1px solid rgba(248, 240, 255, .25); backdrop-filter: blur(6px); pointer-events: none;
+  transition: transform .2s ease, background .2s ease;
+}
+.zoom-badge svg { width: 15px; height: 15px; }
+[data-act="zoom"]:hover .zoom-badge { transform: scale(1.08); background: var(--pink); color: var(--on-bright); }
+.loc .zoom-badge, .mine-head .zoom-badge, .modal-top .zoom-badge { top: 6px; right: 6px; width: 26px; height: 26px; }
+.loc .zoom-badge svg, .mine-head .zoom-badge svg, .modal-top .zoom-badge svg { width: 12px; height: 12px; }
+.slot-img[data-act="zoom"] .pill { z-index: 4; }
+.lightbox {
+  position: fixed; inset: 0; z-index: 95; background: rgba(10, 5, 22, .97);
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 60px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 24px) max(16px, env(safe-area-inset-left, 0px));
+}
+.lb-fig { margin: 0; display: grid; gap: 12px; justify-items: center; max-width: 100%; max-height: 100%; }
+.lb-fig img { max-width: 100%; max-height: calc(100vh - 150px); width: auto; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); cursor: default; }
+.lb-fig figcaption { font-family: var(--f-mono); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); text-align: center; }
+.lb-close {
+  position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); right: max(12px, env(safe-area-inset-right, 0px));
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-2); background: var(--night-3); cursor: pointer; display: grid; place-items: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lightbox:not([hidden]) .lb-fig { animation: lb-in .22s ease-out both; }
+  @keyframes lb-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); transform: translateX(-50%); z-index: 90;
@@ -617,6 +647,7 @@ h2, h3, h4 { text-wrap: balance; }
 
 <div id="drawer" class="drawer" hidden></div>
 <div id="modal" class="modal" hidden></div>
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada" hidden></div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="js/config.js"></script>

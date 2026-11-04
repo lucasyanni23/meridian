@@ -161,7 +161,7 @@
   function slotImg(slot, st, r) {
     const src = imgFor(slot, r);
     const [lbl, cls] = PUB[st];
-    return `<div class="slot-img"><div class="slot-ph">${SILHOUETTE}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" data-fallback="1">` : ""}<span class="pill ${cls}">${lbl}</span></div>`;
+    return `<div class="slot-img"${src ? zoomAttrs(src, displayName(slot, r)) : ""}><div class="slot-ph">${SILHOUETTE}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" data-fallback="1"><span class="zoom-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>` : ""}<span class="pill ${cls}">${lbl}</span></div>`;
   }
 
   function slotCard(slot) {
@@ -288,9 +288,15 @@
     </div></section>`;
   }
 
+  function zoomAttrs(src, cap) {
+    return ` data-act="zoom" data-src="${esc(src)}" data-cap="${esc(cap || "")}" role="button" tabindex="0" aria-label="Ampliar foto${cap ? ": " + esc(cap) : ""}"`;
+  }
+
   function tile(item, n, extraCls) {
     const has = !!item.img;
-    return `<figure class="tile ${has ? "has-img" : "ph-" + n} ${extraCls || ""}" style="margin:0">
+    const cap = item.titulo || item.nome || "";
+    return `<figure class="tile ${has ? "has-img" : "ph-" + n} ${extraCls || ""}" style="margin:0"${has ? zoomAttrs(item.img, cap) : ""}>
+      ${has ? `<span class="zoom-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>` : ""}
       ${has ? `<img src="${esc(item.img)}" alt="${esc(item.titulo || item.nome || "")}" loading="lazy">` : ""}
       ${item.rotulo ? `<figcaption><span class="eyebrow">${esc(item.rotulo)}</span><b>${esc(item.titulo)}</b></figcaption>` : ""}
     </figure>`;
@@ -892,6 +898,26 @@
     document.documentElement.style.overflow = "hidden";
   }
 
+  /* ---------------- lightbox ---------------- */
+  let lbReturn = null;
+  function openLightbox(src, cap, from) {
+    const lb = $("#lightbox");
+    lbReturn = from || null;
+    lb.innerHTML = `<button class="lb-close" type="button" data-act="lb-close" aria-label="Fechar foto"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <figure class="lb-fig"><img src="${esc(src)}" alt="${esc(cap)}">${cap ? `<figcaption>${esc(cap)}</figcaption>` : ""}</figure>`;
+    lb.hidden = false;
+    document.documentElement.style.overflow = "hidden";
+    const c = lb.querySelector(".lb-close"); if (c) c.focus();
+  }
+  function closeLightbox() {
+    const lb = $("#lightbox");
+    if (lb.hidden) return;
+    lb.hidden = true; lb.innerHTML = "";
+    if (!ui.openSlot && $("#drawer").hidden) document.documentElement.style.overflow = "";
+    if (lbReturn && document.body.contains(lbReturn)) { try { lbReturn.focus({ preventScroll: true }); } catch (e) {} }
+    lbReturn = null;
+  }
+
   /* ---------------- chrome ---------------- */
   function updateChrome() {
     const page = ui.page;
@@ -987,6 +1013,7 @@
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-act]");
     if (!t) {
+      if (e.target.id === "lightbox" || (e.target.closest && e.target.closest(".lb-fig") && e.target.tagName !== "IMG")) { closeLightbox(); return; }
       if (e.target.id === "modal") { ui.openSlot = null; ui.confirmSlot = null; renderModal(); }
       else if (e.target.id === "drawer") openDrawer(false);
       return;
@@ -994,6 +1021,8 @@
     const act = t.dataset.act, val = t.dataset.val, slot = t.dataset.slot, uid = t.dataset.uid;
     switch (act) {
       case "drawer-close": openDrawer(false); break;
+      case "zoom": openLightbox(t.dataset.src, t.dataset.cap, t); break;
+      case "lb-close": closeLightbox(); break;
       case "reserve": startReserve(slot); break;
       case "reserve-back": ui.confirmSlot = null; live(); break;
       case "prof-reserve": startReserveProf(val); break;
@@ -1052,6 +1081,8 @@
   $("#menu-btn").addEventListener("click", () => openDrawer($("#drawer").hidden));
 
   document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !$("#lightbox").hidden) { closeLightbox(); return; }
+    if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.act === "zoom") { e.preventDefault(); openLightbox(e.target.dataset.src, e.target.dataset.cap, e.target); return; }
     if (e.key === "Escape") {
       if (ui.openSlot) { ui.openSlot = null; ui.confirmSlot = null; renderModal(); }
       else if (!$("#drawer").hidden) openDrawer(false);
@@ -1072,7 +1103,11 @@
 
   document.addEventListener("error", (e) => {
     const t = e.target;
-    if (t && t.tagName === "IMG" && t.dataset && t.dataset.fallback) t.remove();
+    if (t && t.tagName === "IMG" && t.dataset && t.dataset.fallback) {
+      const w = t.parentElement;
+      if (w) { w.removeAttribute("data-act"); w.removeAttribute("role"); w.removeAttribute("tabindex"); const zb = w.querySelector(".zoom-badge"); if (zb) zb.remove(); }
+      t.remove();
+    }
   }, true);
 
   document.addEventListener("input", (e) => {
