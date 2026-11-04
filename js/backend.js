@@ -126,7 +126,7 @@
     function isAdminU(u) { return !!u && (u.email === "mestre@demo.vc" || api.isAdminEmail(u.email)); }
     function rebuild() {
       const u = session ? userByUid(session) : null;
-      user = u ? { uid: u.uid, email: u.email, nick: u.nick, contato: u.contato || "", isAdmin: isAdminU(u) } : null;
+      user = u ? { uid: u.uid, email: u.email, nick: u.nick, contato: u.contato || "", isAdmin: isAdminU(u), emailVerified: true } : null;
       const d = emptyData();
       d.vagas = JSON.parse(JSON.stringify(mem.vagas));
       d.reservas = JSON.parse(JSON.stringify(mem.reservas));
@@ -178,6 +178,8 @@
       },
       async signOut() { session = null; commit(); },
       async resetPassword() { await wait(); fail("No modo demonstração não há e-mail de recuperação. As contas de teste usam a senha demo123."); },
+      async sendVerification() { await wait(); },
+      async checkVerification() { await wait(); },
       async updateProfile({ nick, contato }) {
         requireUser(); await wait();
         if (!cleanNick(nick)) fail("Escolha um nome de jogador.");
@@ -300,6 +302,22 @@
     function requireUser() { if (!user) fail("Entre na sua conta primeiro."); }
     function requireAdmin() { requireUser(); if (!user.isAdmin) fail("Só o mestre pode fazer isso."); }
 
+    // O mestre é definido só nas regras do Firestore (firestore.rules).
+    // Aqui o site descobre se quem entrou é o mestre tentando ler uma coleção que só ele pode ler.
+    let probeSeq = 0;
+    async function probeAdmin() {
+      if (!user) return;
+      const seq = ++probeSeq, uid = user.uid;
+      let ok = false;
+      try { await db.collection("segredos").limit(1).get({ source: "server" }); ok = true; } catch (e) { ok = false; }
+      if (seq !== probeSeq || !user || user.uid !== uid) return;
+      if (ok !== user.isAdmin) {
+        user = { ...user, isAdmin: ok };
+        subscribeUser(user);
+        emitAuth();
+      }
+    }
+
     function subscribePrivado() {
       if (privSub) { privSub(); privSub = null; }
       raw.privado = null;
@@ -370,13 +388,14 @@
         auth.onAuthStateChanged(u => {
           if (u) {
             const email = (u.email || "").toLowerCase();
-            user = { uid: u.uid, email, nick: "", contato: "", isAdmin: api.isAdminEmail(email) };
+            user = { uid: u.uid, email, nick: "", contato: "", isAdmin: false, emailVerified: !!u.emailVerified };
             lastMyStatus = raw.reservas[u.uid] ? raw.reservas[u.uid].status : null;
           } else {
             user = null; lastMyStatus = null;
           }
           subscribeUser(user);
           emitAuth();
+          if (user) probeAdmin();
           if (first) { first = false; resolve(); }
         });
       });
@@ -389,6 +408,20 @@
         await db.doc("perfis/" + cred.user.uid).set({ nick: cleanNick(nick), contato: cleanText(contato, 80), criadoEm: ts() });
         user = { ...user, nick: cleanNick(nick), contato: cleanText(contato, 80) };
         emitAuth();
+        try { await cred.user.sendEmailVerification(); } catch (e) { console.warn(e); }
+      }),
+      sendVerification: wrap(async () => {
+        requireUser();
+        await auth.currentUser.sendEmailVerification();
+      }),
+      checkVerification: wrap(async () => {
+        requireUser();
+        await auth.currentUser.reload();
+        await auth.currentUser.getIdToken(true);
+        user = { ...user, emailVerified: !!auth.currentUser.emailVerified };
+        emitAuth();
+        await probeAdmin();
+        if (!user.emailVerified) fail("Ainda não aparece como confirmado. Abra o link do e-mail e tente de novo.");
       }),
       signIn: wrap(async (email, pass) => { await auth.signInWithEmailAndPassword(String(email).trim(), pass); }),
       signOut: wrap(async () => { await auth.signOut(); }),

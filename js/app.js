@@ -633,7 +633,11 @@
         <div class="field"><label for="pf-contato">Contato <span class="hint">visível só para o mestre</span></label><input class="input" id="pf-contato" maxlength="80" value="${esc(u.contato)}"></div>
       </div>
       <div class="btn-row"><button class="btn btn-primary btn-sm" type="submit">Salvar perfil</button></div></form>` : "";
-    return head + form;
+    const verify = B.mode === "firebase" && !u.emailVerified
+      ? `<div class="callout" style="margin-top:14px"><b>Confirme seu e-mail</b>Enviamos um link de confirmação para ${esc(u.email)}. Se for o mestre, o painel do mestre aparece depois da confirmação.
+          <div class="btn-row" style="margin-top:10px"><button class="btn btn-ghost btn-sm" type="button" data-act="verify-check">Já confirmei</button><button class="btn btn-quiet btn-sm" type="button" data-act="verify-send">Reenviar e-mail</button></div></div>`
+      : "";
+    return head + verify + form;
   }
 
   function fichaForm(slot, r) {
@@ -765,7 +769,7 @@
       }
       return `<div class="q-item" style="--fac:${s.cor}">
         <button class="q-row" type="button" data-act="q-toggle" data-uid="${uid}" aria-expanded="${open}">
-          <span class="q-main"><b>${esc(titleLine(s, r))}</b><small>${esc(r.jogador || "Jogador")}${esc(contato)}${dl ? " · " + esc(dl.txt) : ""}</small></span>
+          <span class="q-main"><b>${esc((r.ficha && r.ficha.nome && r.status !== "aprovada" ? r.ficha.nome + " · " + (s.indep ? s.nome : s.papel) : titleLine(s, r)))}</b><small>${esc(r.jogador || "Jogador")}${esc(contato)}${dl ? " · " + esc(dl.txt) : ""}</small></span>
           <span class="pill ${cls}">${lbl}</span>
         </button>${detail}</div>`;
     }).join("");
@@ -818,11 +822,12 @@
       if (ui.sig.auth !== sig) { pn.innerHTML = authHTML(); ui.sig.auth = sig; }
       return;
     }
+    if ($("#pn-me") && !!$("#pn-admin") !== !!u.isAdmin) { pn.innerHTML = ""; ui.sig = {}; }
     if (!$("#pn-me")) {
       pn.innerHTML = `<div id="pn-account"></div><div id="pn-me"></div>${u.isAdmin ? `<div id="pn-admin"></div><div id="pn-config"></div>` : ""}`;
     }
     const r = myRes();
-    const sA = JSON.stringify([u.nick, u.contato, u.email, u.isAdmin, ui.editProfile]);
+    const sA = JSON.stringify([u.nick, u.contato, u.email, u.isAdmin, u.emailVerified, ui.editProfile]);
     if (ui.sig.acc !== sA) { $("#pn-account").innerHTML = accountHTML(u); ui.sig.acc = sA; }
 
     const sM = JSON.stringify([r && r.slotId, r && r.status, r && r.notaMestre, r && r.status === "aprovada" ? r.ficha : null,
@@ -1008,6 +1013,8 @@
       case "pn-tab": ui.pnTab = val; renderPainel(false); break;
       case "demo-login": run(() => B.demoLogin(val)); break;
       case "logout": ui.editProfile = false; ui.confirmCancel = false; run(() => B.signOut(), "Você saiu da conta."); break;
+      case "verify-send": run(() => B.sendVerification(), "E-mail de confirmação enviado. Confira também o spam."); break;
+      case "verify-check": run(() => B.checkVerification(), "E-mail confirmado."); break;
       case "edit-profile": ui.editProfile = !ui.editProfile; renderPainel(false); break;
       case "cancel-res": ui.confirmCancel = true; renderPainel(false); break;
       case "cancel-no": ui.confirmCancel = false; renderPainel(false); break;

@@ -20,7 +20,7 @@ window.MV_CONFIG = {
   // },
   firebase: null,
 
-  // E-mail(s) do mestre. Quem entrar com um destes e-mails vê o painel do mestre.
-  // Use o MESMO e-mail em firestore.rules (função isAdmin).
-  admins: ["seu-email@gmail.com"]
+  // O e-mail do mestre fica SÓ nas regras do Firestore (firestore.rules, função isAdmin),
+  // para não aparecer no código público do site. Esta lista vale só para o modo demonstração.
+  admins: []
 };
