@@ -102,7 +102,7 @@ window.MV_DATA = {
       resumo: "Os rivais. Cassinos, boates, chantagem tecnológica e lavagem por cripto e apostas.",
       galeria: [
         { rotulo: "Sede", titulo: "Boate Neon Mirage", img: "" },
-        { rotulo: "Território", titulo: "Ocean Drive", img: "" },
+        { rotulo: "Território", titulo: "Ocean Drive", img: "img/south-beach.webp" },
         { rotulo: "Residência", titulo: "Cobertura em Miami Beach", img: "" }
       ],
       historiaTitulo: "A noite tem dono. E ele quer o dia também.",
